@@ -2,11 +2,11 @@ package probe
 
 import (
 	"context"
-	"os"
-	"testing"
-
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"os"
+	"testing"
+	"time"
 )
 
 func TestProbe_Working(t *testing.T) {
@@ -15,7 +15,7 @@ func TestProbe_Working(t *testing.T) {
 		test = true
 	}
 	log := zerolog.New(os.Stdout)
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 	w := make(chan Runner)
 	p := NewProbe(ctx, w, &log)
 	assert.True(t, p.Working(), "NewProbe -> p.Working == true")
@@ -23,6 +23,16 @@ func TestProbe_Working(t *testing.T) {
 	p.Stop(true)
 	assert.False(t, p.Working(), "p.Stop -> p.Working == false")
 	assert.True(t, test, "test == true")
+	p.Work()
+	cancel()
+	for i := 0; i < 10; i++ {
+		// wait for goroutine to return after cancel
+		if !p.Working() {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	assert.False(t, p.Working(), "ctx cancel -> p.Working == false")
 }
 
 func TestProbe_Stop(t *testing.T) {

@@ -12,12 +12,13 @@ type (
 
 	// Probe is a helper that runs functions on a separate goroutine.
 	Probe struct {
-		log     *zerolog.Logger
-		ctx     context.Context
-		cancel  context.CancelFunc
-		work    chan Runner
-		done    chan struct{}
-		working bool
+		log      *zerolog.Logger
+		ctx      context.Context
+		childCtx context.Context
+		cancel   context.CancelFunc
+		work     chan Runner
+		done     chan struct{}
+		working  bool
 	}
 )
 
@@ -43,13 +44,13 @@ func (p *Probe) Work() {
 		return
 	}
 	// create a new cancelable child context only to be used by this goroutine
-	p.ctx, p.cancel = context.WithCancel(p.ctx)
+	p.childCtx, p.cancel = context.WithCancel(p.ctx)
 	p.working = true
 	p.done = make(chan struct{})
 	go func() {
 		for {
 			select {
-			case <-p.ctx.Done():
+			case <-p.childCtx.Done():
 				// the context is done, exit
 				p.working = false
 				close(p.done)

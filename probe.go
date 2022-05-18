@@ -36,7 +36,7 @@ var (
 func getID(log *zerolog.Logger) string {
 	buf := make([]byte, 6)
 	if _, err := randStream.Read(buf); err != nil {
-		log.Panic().Err(err).Msg("unable to generate Probe ID")
+		log.Panic().Err(err).Msg("unable to generate probe id")
 	}
 	return hex.EncodeToString(buf)[:6]
 }
@@ -44,7 +44,7 @@ func getID(log *zerolog.Logger) string {
 // NewProbe initializes and returns a new Probe.
 func NewProbe(ctx context.Context, work chan Runner, log *zerolog.Logger) *Probe {
 	id := getID(log)
-	ctxLogger := log.With().Str("probe_id", id).Logger()
+	ctxLogger := log.With().Str("id", id).Str("source", "probe.Probe").Logger()
 	p := &Probe{
 		log:  &ctxLogger,
 		ctx:  ctx,
@@ -81,12 +81,12 @@ func (p *Probe) Work() {
 	p.working = true
 	p.done = make(chan struct{})
 	go func() {
-		p.log.Debug().Msg("probe starting work event loop")
+		p.log.Debug().Msg("starting work event loop")
 		for {
 			select {
 			case <-p.childCtx.Done():
 				// the context is done, exit
-				p.log.Debug().Msg("probe shutting down")
+				p.log.Debug().Msg("shutting down")
 				p.working = false
 				close(p.done)
 				return

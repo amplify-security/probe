@@ -3,7 +3,7 @@
 [![Amplify Security](https://github.com/amplify-security/probe/actions/workflows/amplify.yml/badge.svg?branch=main)](https://github.com/amplify-security/probe/actions/workflows/amplify.yml)
 [![test](https://github.com/github/docs/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/amplify-security/probe/actions/workflows/test.yml)
 ![coverage](https://raw.githubusercontent.com/amplify-security/probe/badges/.badges/main/coverage.svg)
-
+[![Go Report Card](https://goreportcard.com/badge/github.com/amplify-security/probe)](https://goreportcard.com/report/github.com/amplify-security/probe)
 [![Go Reference](https://pkg.go.dev/badge/github.com/amplify-security/probe.svg)](https://pkg.go.dev/github.com/amplify-security/probe)
 
 A modern, zero-dependency goroutine pool. Probe is designed to abstract goroutine synchronization

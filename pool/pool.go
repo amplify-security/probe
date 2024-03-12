@@ -91,7 +91,7 @@ func (p *Pool) Stop(wait bool) {
 
 // Run executes a probe.Runner on a Probe in the Pool.
 func (p *Pool) Run(r probe.Runner) {
-	p.work <-r
+	p.work <- r
 }
 
 // Idle retuns the number of idle Probes in the Pool.

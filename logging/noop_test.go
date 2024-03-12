@@ -16,23 +16,23 @@ However, they are included for completeness and test coverage.
 
 func TestNoopLogHandler_Enabled(t *testing.T) {
 	cases := []struct {
-		l slog.Level
+		l   slog.Level
 		msg string
-	} {
+	}{
 		{
-			l: slog.LevelDebug,
+			l:   slog.LevelDebug,
 			msg: "Enabled(debug) -> false",
 		},
 		{
-			l: slog.LevelInfo,
+			l:   slog.LevelInfo,
 			msg: "Enabled(info) -> false",
 		},
 		{
-			l: slog.LevelWarn,
+			l:   slog.LevelWarn,
 			msg: "Enabled(warn) -> false",
 		},
 		{
-			l: slog.LevelError,
+			l:   slog.LevelError,
 			msg: "Enabled(error) -> false",
 		},
 	}

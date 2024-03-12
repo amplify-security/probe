@@ -48,7 +48,7 @@ func TestPoolConfig_getLogHandler(t *testing.T) {
 			msg: "getLogHandler -> MockLogHandler",
 		},
 		{
-			h: nil,
+			h:   nil,
 			msg: "getLogHandler -> NoopLogHandler",
 		},
 	}

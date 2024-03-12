@@ -1,6 +1,6 @@
 module github.com/amplify-security/probe
 
-go 1.18
+go 1.22
 
 require (
 	github.com/rs/zerolog v1.26.1

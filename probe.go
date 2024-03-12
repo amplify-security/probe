@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/hex"
 	"io"
+	"log/slog"
 	"math/rand"
+	"sync"
+	"sync/atomic"
 	"time"
-
-	"github.com/rs/zerolog"
 )
 
 type (
@@ -16,15 +17,18 @@ type (
 
 	// Probe is a helper that runs functions on a separate goroutine.
 	Probe struct {
-		log      *zerolog.Logger
-		ctx      context.Context
-		childCtx context.Context
-		cancel   context.CancelFunc
-		work     chan Runner
-		done     chan struct{}
-		working  bool
-		idle     bool
-		id       string
+		log        *slog.Logger
+		ctx        context.Context
+		childCtx   context.Context
+		cancel     context.CancelFunc
+		work       chan Runner
+		done       chan struct{}
+		running    *atomic.Bool
+		runningCtr *atomic.Int32
+		idle       *atomic.Bool
+		idleCtr    *atomic.Int32
+		waitGroup  *sync.WaitGroup
+		id         string
 	}
 )
 
@@ -33,26 +37,36 @@ var (
 )
 
 // getID returns a random hex string to be used as a unique identifier for a Probe.
-func getID(log *zerolog.Logger) string {
+func getID(log *slog.Logger) string {
 	buf := make([]byte, 6)
 	if _, err := randStream.Read(buf); err != nil {
-		log.Panic().Err(err).Msg("unable to generate probe id")
+		log.Error("failed to generate probe ID", "error", err)
+		panic(err)
 	}
 	return hex.EncodeToString(buf)[:6]
 }
 
 // NewProbe initializes and returns a new Probe.
-func NewProbe(ctx context.Context, work chan Runner, log *zerolog.Logger) *Probe {
+func NewProbe(cfg *ProbeConfig) *Probe {
+	log := slog.New(cfg.getLogHandler())
 	id := getID(log)
-	ctxLogger := log.With().Str("id", id).Str("source", "probe.Probe").Logger()
+	ctxLogger := log.With("id", id, "source", "probe.Probe")
+	running := new(atomic.Bool)
+	running.Store(false)
+	idle := new(atomic.Bool)
+	idle.Store(true)
 	p := &Probe{
-		log:  &ctxLogger,
-		ctx:  ctx,
-		work: work,
-		idle: true,
-		id:   id,
+		log:        ctxLogger,
+		ctx:        cfg.getCtx(),
+		work:       cfg.getWorkChan(),
+		running:    running,
+		runningCtr: cfg.getRunningCtr(),
+		idle:       idle,
+		idleCtr:    cfg.getIdleCtr(),
+		waitGroup:  cfg.getWaitGroup(),
+		id:         id,
 	}
-	p.Work()
+	p.Run()
 	return p
 }
 
@@ -61,39 +75,52 @@ func (p *Probe) ID() string {
 	return p.id
 }
 
-// Working returns the status of the Probe: true if work event loop is running.
-func (p *Probe) Working() bool {
-	return p.working
+// Running returns the status of the Probe: true if work event loop is running.
+func (p *Probe) Running() bool {
+	return p.running.Load()
 }
 
 // Idle returns the status of the Probe: true if the Probe is Working but has no current work to execute.
 func (p *Probe) Idle() bool {
-	return p.idle
+	return p.idle.Load()
 }
 
-// Work is the main event loop for the Probe. Work will start a new goroutine.
-func (p *Probe) Work() {
-	if p.Working() {
+// WorkChan returns the channel used for work events.
+func (p *Probe) WorkChan() chan Runner {
+	return p.work
+}
+
+// Run is the main event loop for the Probe. Run will start a new goroutine.
+func (p *Probe) Run() {
+	if p.Running() {
 		return
 	}
 	// create a new cancelable child context only to be used by this goroutine
 	p.childCtx, p.cancel = context.WithCancel(p.ctx)
-	p.working = true
+	p.waitGroup.Add(1)
 	p.done = make(chan struct{})
 	go func() {
-		p.log.Debug().Msg("starting work event loop")
+		p.log.Debug("starting event loop")
+		defer p.waitGroup.Done()
+		p.running.Store(true)
+		p.runningCtr.Add(1)
+		p.idleCtr.Add(1)
 		for {
 			select {
 			case <-p.childCtx.Done():
 				// the context is done, exit
-				p.log.Debug().Msg("shutting down")
-				p.working = false
+				p.log.Debug("shutting down")
+				p.running.Store(false)
+				p.idle.Store(true)
+				p.runningCtr.Add(-1)
 				close(p.done)
 				return
 			case runner := <-p.work:
-				p.idle = false
+				p.idle.Store(false)
+				p.idleCtr.Add(-1)
 				runner()
-				p.idle = true
+				p.idle.Store(true)
+				p.idleCtr.Add(1)
 			}
 		}
 	}()
@@ -101,7 +128,7 @@ func (p *Probe) Work() {
 
 // Stop will stop the Probe from doing further work. Stop blocks if wait is true until current work is complete.
 func (p *Probe) Stop(wait bool) {
-	if !p.Working() {
+	if !p.Running() {
 		return
 	}
 	p.cancel()

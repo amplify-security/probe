@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"sync"
 	"sync/atomic"
+
+	"github.com/amplify-security/probe/logging"
 )
 
 type (
@@ -22,7 +24,7 @@ type (
 // getLogHandler returns the log handler to use for the Probe.
 func (c *ProbeConfig) getLogHandler() slog.Handler {
 	if c.LogHandler == nil {
-		return &NoopLogHandler{}
+		return &logging.NoopLogHandler{}
 	}
 	return c.LogHandler
 }

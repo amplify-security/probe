@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/amplify-security/probe"
+	"github.com/amplify-security/probe/logging"
 )
 
 const (
@@ -25,7 +25,7 @@ type (
 // getLogHandler returns the log handler to use for the Pool.
 func (c *PoolConfig) getLogHandler() slog.Handler {
 	if c.LogHandler == nil {
-		return &probe.NoopLogHandler{}
+		return &logging.NoopLogHandler{}
 	}
 	return c.LogHandler
 }

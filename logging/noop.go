@@ -1,4 +1,4 @@
-package probe
+package logging
 
 import (
 	"context"

@@ -13,16 +13,6 @@ jobs:
           go-version-file: go.mod
       - name: test
         run: make test
-  coverage:
-    name: coverage
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
-      - name: setup go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
       - name: coverage
         uses: vladopajic/go-test-coverage@97ecc524075d8ece0e1a406edec1c191e2dd3277
         with:
@@ -31,4 +21,3 @@ jobs:
           threshold-file: 80
           threshold-package: 80
           threshold-total: 90
-

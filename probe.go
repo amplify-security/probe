@@ -54,7 +54,7 @@ func NewProbe(cfg *ProbeConfig) *Probe {
 	running := new(atomic.Bool)
 	running.Store(false)
 	idle := new(atomic.Bool)
-	idle.Store(true)
+	idle.Store(false)
 	p := &Probe{
 		log:        ctxLogger,
 		ctx:        cfg.getCtx(),
@@ -103,6 +103,7 @@ func (p *Probe) Run() {
 		p.log.Debug("starting event loop")
 		defer p.waitGroup.Done()
 		p.running.Store(true)
+		p.idle.Store(true)
 		p.runningCtr.Add(1)
 		p.idleCtr.Add(1)
 		for {

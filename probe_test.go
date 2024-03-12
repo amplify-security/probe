@@ -80,18 +80,22 @@ func TestProbe_Working(t *testing.T) {
 
 func TestProbe_Idle(t *testing.T) {
 	ctx := context.Background()
-	done := make(chan struct{})
+	ctrl := make(chan struct{})
+	work := make(chan struct{})
 	runner := func() {
-		<-done
+		close(work)
+		<-ctrl
 	}
 	p := NewProbe(&ProbeConfig{
 		Ctx:        ctx,
 		LogHandler: logHandler,
 	})
+	waitForIdle(p)
 	assert.True(t, p.Idle(), "NewProbe -> p.Idle == true")
 	p.WorkChan() <- runner
+	<-work
 	assert.False(t, p.Idle(), "runner -> p.Idle == false")
-	close(done)
+	close(ctrl)
 	waitForIdle(p)
 	assert.True(t, p.Idle(), "close(done) -> p.Idle == true")
 	p.Stop(true)

@@ -112,3 +112,25 @@ func TestPool_Run(t *testing.T) {
 	assert.Equal(t, 16, int(ctr.Load()), "Run(r1) -> ctr == 16")
 	p.Stop(true)
 }
+
+func TestPool_Idle(t *testing.T) {
+	p := NewPool(&PoolConfig{
+		LogHandler: logHandler,
+		Size:       16,
+	})
+	for _, probe := range p.probes {
+		waitForIdle(probe)
+	}
+	assert.Equal(t, 16, p.Idle(), "NewPool(16) -> p.Idle == 16")
+}
+
+func TestPool_Running(t *testing.T) {
+	p := NewPool(&PoolConfig{
+		LogHandler: logHandler,
+		Size:       16,
+	})
+	for _, probe := range p.probes {
+		waitForRunning(probe)
+	}
+	assert.Equal(t, 16, p.Running(), "NewPool(16) -> p.Running == 16")
+}

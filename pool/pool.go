@@ -94,6 +94,12 @@ func (p *Pool) Run(r probe.Runner) {
 	p.work <-r
 }
 
-func (p *Pool) NumIdle() int {
+// Idle retuns the number of idle Probes in the Pool.
+func (p *Pool) Idle() int {
 	return int(p.idleCtr.Load())
+}
+
+// Running returns the number of running Probes in the Pool.
+func (p *Pool) Running() int {
+	return int(p.runningCtr.Load())
 }

@@ -1,5 +1,6 @@
 # probe
 
+[![Amplify Security](https://github.com/amplify-security/probe/actions/workflows/amplify.yml/badge.svg?branch=main)](https://github.com/amplify-security/probe/actions/workflows/amplify.yml)
 [![test](https://github.com/github/docs/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/amplify-security/probe/actions/workflows/test.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/amplify-security/probe)](https://goreportcard.com/report/github.com/amplify-security/probe)
 
